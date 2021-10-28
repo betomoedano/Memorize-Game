@@ -4,69 +4,44 @@
 //
 //  Created by Alberto Moedano on 10/26/21.
 //
+// VIEW 
 
 import SwiftUI
 
 struct ContentView: View {
     
-    var emojis: [String] = ["🤡", "👺", "😷", "👾", "🤦🏻‍♂️", "🐒", "🐶",
-        "👑", "👛", "🌂", "🌸", "🌏", "🌛", "🌜", "🧀", "🥝", "🥕",
-        "🍎", "🚣🏻‍♂️", "🏅", "🎸", "🎨", "🚒", "❤️", "🎁", "🛒"]
+    let viewModel: EmojiMemoryGame
+    
     @State var emojiCount = 26
     
     var body: some View {
-        VStack {
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) {
-                    ForEach(emojis[0..<emojiCount], id: \.self) { emoji in
-                        CardView(content: emoji).aspectRatio(1/1, contentMode: .fit)
+                    ForEach(viewModel.cards) { card in
+                        CardView(card: card).aspectRatio(1/1, contentMode: .fit)
+                            .onTapGesture {
+                                viewModel.choose(card)
+                            }
                     }
                 }
             }
             .foregroundColor(.gray)
-            Spacer()
-            HStack {
-                remove
-                Spacer()
-                add
-            }
-            .font(.largeTitle)
-        }
-        .padding(.vertical)
-    }
-    
-    var remove: some View {
-        Button(action: {
-            if emojiCount > 1 {
-                emojiCount -= 1
-            }
-        }, label: {
-            Image(systemName: "minus.circle")
-        })
-    }
-    var add: some View {
-        Button(action: {
-            if emojiCount < emojis.count {
-                emojiCount += 1
-            }
-        }, label: {
-            Image(systemName: "plus.circle")        })
+            .padding(.vertical)
     }
 }
 
 
 struct CardView: View {
+    let card: MemoryGame<String>.Card
     
-    var content: String
-    @State var isFaceUp: Bool = true
     var body: some View {
         
         ZStack {
             let shape = RoundedRectangle(cornerRadius: 20)
-            if isFaceUp {
+            if card.isFaceUp {
                 shape.fill().foregroundColor(.white)
                 shape.strokeBorder(lineWidth: 3)
-                Text(content).font(.largeTitle).foregroundColor(.orange)
+                Text(card.content).font(.largeTitle).foregroundColor(.orange)
             } else {
                 if #available(iOS 15.0, *) {
                     shape.fill().foregroundColor(.mint)
@@ -76,17 +51,19 @@ struct CardView: View {
                 }
             }
         }
-        .onTapGesture {
-            isFaceUp = !isFaceUp
-        }
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
-            .preferredColorScheme(.dark)
-        ContentView()
+        let game = EmojiMemoryGame()
+        if #available(iOS 15.0, *) {
+            ContentView(viewModel: game)
+                .preferredColorScheme(.dark)
+        } else {
+            // Fallback on earlier versions
+        }
+        ContentView(viewModel: game)
             .preferredColorScheme(.light)
     }
 }
